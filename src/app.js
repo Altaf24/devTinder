@@ -2,11 +2,18 @@ const express = require('express');
 
 const  app = express();
 
-app.use((req,res)=>{
-    res.send('hello world');
+
+app.get("/users",(req,res)=>{
+    res.send({firstName:"sachin",lastName:"kumar"});
 })
+app.post("/users",(req,res)=>{
+    console.log("Save data to the database");
+    res.send("Data Succeessfully saved to the database");
+})
+
+
 app.use("/test",(req,res)=>{
-    res.send('hello world');
+    res.send('hello world hello');
 })
 
 app.listen(3000,()=>{
