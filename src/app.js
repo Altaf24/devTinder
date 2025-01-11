@@ -6,29 +6,39 @@ const User = require('./models/user');
 app.use(express.json());
 
 
-app.post('/signup',async(req,res)=>{
-    // console.log(req.body);
-    // const userObj = {
-    //     firstName: "Virat",
-    //     lastName: "Kohli",
-    //     email: "virat@gmail.com",
-    //     password: "virat@123",
-    //     gender: "male",
-    //     age: 35,
-    // }
-    // Creating a new instnce of User model
-    const user = new User(req.body);
+// app.post('/signup',async(req,res)=>{
+//     // console.log(req.body);
+//     // const userObj = {
+//     //     firstName: "Virat",
+//     //     lastName: "Kohli",
+//     //     email: "virat@gmail.com",
+//     //     password: "virat@123",
+//     //     gender: "male",
+//     //     age: 35,
+//     // }
+//     // Creating a new instnce of User model
+//     const user = new User(req.body);
 
-    try{
-        await user.save();
-        res.send('User created successfully');
-    }catch(err){
-        res.status(500).send("Error creating user");
-    }
+//     try{
+//         await user.save();
+//         res.send('User created successfully');
+//     }catch(err){
+//         res.status(500).send("Error creating user");
+//     }
 
     
-})
+// })
 
+// Feed API - Get all users from DB
+
+app.get('/feed',async(req,res)=>{
+    try{
+        const users = await User.find();
+        res.send(users);
+    }catch(err){
+        res.status(500).send("Error fetching users");
+    }
+});
 
 connectDB().then(()=>{
     console.log('DB connected');
