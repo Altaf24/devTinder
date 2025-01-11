@@ -7,7 +7,7 @@ app.use(express.json());
 
 
 app.post('/signup',async(req,res)=>{
-    // console.log(req.body);
+    console.log(req.body);
     // const userObj = {
     //     firstName: "Virat",
     //     lastName: "Kohli",
@@ -82,8 +82,8 @@ app.patch('/user',async(req,res)=>{
 
 connectDB().then(()=>{
     console.log('DB connected');
-    app.listen(3000,()=>{
-        console.log('server is running on port 3000....');
+    app.listen(56789,()=>{
+        console.log('server is running on port 56789....');
     })
 }).catch((err)=>{
     console.log(err);
