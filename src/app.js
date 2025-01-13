@@ -4,9 +4,15 @@ const  app = express();
 const User = require('./models/user');
 const {validateSignUpData} = require('./utils/validation');
 const bcrypt = require('bcrypt');
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
+const {userAuth} = require('./middlewares/auth');
+
 
 
 app.use(express.json());
+app.use(cookieParser());
+
 
 
 app.post('/signup',async(req,res)=>{
@@ -25,6 +31,7 @@ app.post('/signup',async(req,res)=>{
 
     // Encrypt the password
     const passwordHash = await bcrypt.hash(password,10);
+    console.log(passwordHash)
     
 
     const user = new User({
@@ -33,7 +40,8 @@ app.post('/signup',async(req,res)=>{
         email,
         password: passwordHash,
     });
-
+    
+    
     try{
         await user.save();
         res.send('User created successfully');
@@ -51,66 +59,47 @@ app.post('/login',async(req,res)=>{
         if(!user){
             return res.status(400).send("Invalid credentials");
         }
+        console.log(user.password);
         const isMatch = await bcrypt.compare(password,user.password);
         if(!isMatch){
             return res.status(400).send("Invalid credentials");
         }
-        res.send("Login successful");
+        
+        const token = await user.getJWT();
+        res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+        });
+        
+        return res.json({ message: "Login successful" });
     }catch(err){
         res.status(500).send("Error logging in");
     }
 });
 
-// Feed API - Get all users from DB
-
-app.get('/feed',async(req,res)=>{
-    try{
-        const users = await User.find();
-        res.send(users);
-    }catch(err){
-        res.status(500).send("Error fetching users");
+app.get("/profile",userAuth, async (req, res) => {
+    try {
+       const user = req.user;
+       
+       res.send(user);
+    } catch (error) {
+        return res.status(401).json({ message: 'Invalid token' });
     }
 });
+// Feed API - Get all users from DB
 
-app.delete("/user",async(req,res)=>{
-    const userId = req.body.userId;
-    try{
-        const user = await User.findByIdAndDelete(userId);
-        res.send("User deleted successfully");
-    }catch(err){
-        res.status(500).send("Error deleting user");
-    }
+app.post("/sendConnectionRequest",userAuth, async (req, res) => {
+    console.log("sendConnectionRequest");
+    res.send("sendConnectionRequest");
+    // try {
+    //    const user = req.user;
 
-
-})
-
-// update user
-app.patch('/user',async(req,res)=>{
-    const userId = req.body.userId;
-    const data = req.body;
-
-    
-
-    try{
-        const ALLOWED_UPDATES = ["firstName","lastName","userId","skills","gender","age","photoUrl","about"];
-        const isUpdateAllowed = Object.keys(data).every((key)=>{
-        return ALLOWED_UPDATES.includes(key);
-    });
-    if(!isUpdateAllowed){
-        throw new Error("Invalid update request");
-    }
-    if(data?.skills.length > 10){
-        throw new Error("Skills array cannot be more than 10");
-
-    }
-
-
-    await User.findByIdAndUpdate({_id:userId},data,{returnDocument:"after",runValidators:true,});
-    res.send("User updated successfully");
-    }catch(err){
-        res.status(500).send("Error updating user");
-    }
-})
+    //    res.send(user);
+    // } catch (error) {
+    //     return res.status(401).json({ message: 'Invalid token' });
+    // }
+});
 
 connectDB().then(()=>{
     console.log('DB connected');
