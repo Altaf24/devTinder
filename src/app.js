@@ -2,12 +2,15 @@ const express = require('express');
 const connectDB =  require('./config/database');
 const  app = express();
 const User = require('./models/user');
+const {validateSignUpData} = require('./utils/validation');
+const bcrypt = require('bcrypt');
+
 
 app.use(express.json());
 
 
 app.post('/signup',async(req,res)=>{
-    console.log(req.body);
+   
     // const userObj = {
     //     firstName: "Virat",
     //     lastName: "Kohli",
@@ -17,17 +20,46 @@ app.post('/signup',async(req,res)=>{
     //     age: 35,
     // }
     // Creating a new instnce of User model
-    const user = new User(req.body);
+    validateSignUpData(req);
+    const {firstName,lastName,email,password} = req.body;
+
+    // Encrypt the password
+    const passwordHash = await bcrypt.hash(password,10);
+    
+
+    const user = new User({
+        firstName,
+        lastName,
+        email,
+        password: passwordHash,
+    });
 
     try{
         await user.save();
         res.send('User created successfully');
     }catch(err){
-        res.status(500).send("Error creating user");
+        res.status(400).send("Error:" + err.message);
     }
 
     
 })
+
+app.post('/login',async(req,res)=>{
+    const {email,password} = req.body;
+    try{
+        const user = await User.findOne({email});
+        if(!user){
+            return res.status(400).send("Invalid credentials");
+        }
+        const isMatch = await bcrypt.compare(password,user.password);
+        if(!isMatch){
+            return res.status(400).send("Invalid credentials");
+        }
+        res.send("Login successful");
+    }catch(err){
+        res.status(500).send("Error logging in");
+    }
+});
 
 // Feed API - Get all users from DB
 
