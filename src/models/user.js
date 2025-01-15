@@ -41,11 +41,12 @@ const userSchema = new mongoose.Schema({
     },
     gender: {
         type: String,
-        validate(value) {
-            if(!['male', 'female', 'others'].includes(value)) {
-                throw new Error('Invalid gender');
-            }
-        }
+        enum:{
+            values:['male', 'female', 'others'],
+            message: '{VALUE} is incorrect gender'
+
+        },
+        
         
     },
     age: {
@@ -71,6 +72,8 @@ const userSchema = new mongoose.Schema({
 },{
     timestamps: true,
 });
+
+
 
 userSchema.methods.getJWT = async function() {
     const user = this;
